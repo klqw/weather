@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Input Directory
+data
+
+# Output Directory
+output
+
+# Log File
+app.log
+
+# Test File
+test.py
