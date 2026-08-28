@@ -97,6 +97,35 @@ def all_location_avg(df, config):
     ].mean()
   )
 
+# locationごと & 月・日ごとの各気温の最高値を全取得
+def daily_location_max(df, config):
+  df["月"] = df["年月日"].dt.month
+  df["日"] = df["年月日"].dt.day
+
+  return (
+    df.groupby(["location", "月", "日"])[
+      [
+        config["DEFAULT"]["avg_tmp"],
+        config["DEFAULT"]["max_tmp"],
+        config["DEFAULT"]["min_tmp"]
+      ]
+    ].max()
+  )
+
+# locationごと & 月・日ごとの各気温の最低値を全取得
+def daily_location_min(df, config):
+  df["月"] = df["年月日"].dt.month
+  df["日"] = df["年月日"].dt.day
+
+  return (
+    df.groupby(["location", "月", "日"])[
+      [
+        config["DEFAULT"]["avg_tmp"],
+        config["DEFAULT"]["max_tmp"],
+        config["DEFAULT"]["min_tmp"]
+      ]
+    ].min()
+  )
 
 # --------------------
 # CSV出力
@@ -163,6 +192,12 @@ def main():
   result_a = all_location_avg(df, config)
   # print(result_a)
 
+  # locationごと & 月・日ごとの各気温の最高値を全取得
+  result_max = daily_location_max(df, config)
+
+  # locationごと & 月・日ごとの各気温の最低値を全取得
+  result_min = daily_location_min(df, config)
+
   # --------------------
   # 出力
   # --------------------
@@ -171,22 +206,32 @@ def main():
   month_filename = "month_stats.csv"
   daily_filename = "daily_stats.csv"
   all_filename = "overall_stats.csv"
+  max_filename = "max_stats.csv"
+  min_filename = "min_stats.csv"
 
   # 出力ファイルパス指定
   month_output_file = (output_dir / config["DEFAULT"]["stats_dir"] / month_filename)
   daily_output_file = (output_dir / config["DEFAULT"]["stats_dir"] / daily_filename)
   all_output_file = (output_dir / config["DEFAULT"]["stats_dir"] / all_filename)
+  max_output_file = (output_dir / config["DEFAULT"]["stats_dir"] / max_filename)
+  min_output_file = (output_dir / config["DEFAULT"]["stats_dir"] / min_filename)
 
   # 月、月・日、全期間のCSV出力
   save_csv(result_m, month_output_file, config)
   save_csv(result_d, daily_output_file, config)
   save_csv(result_a, all_output_file, config)
+  save_csv(result_max, max_output_file, config)
+  save_csv(result_min, min_output_file, config)
   print(f"\n月ごとのCSV出力先: {month_output_file}")
   print(f"月・日ごとのCSV出力先: {daily_output_file}")
   print(f"全期間のCSV出力先: {all_output_file}")
+  print(f"最高値のCSV出力先: {max_output_file}")
+  print(f"最低値のCSV出力先: {min_output_file}")
   logging.info("出力完了(month): %s", month_output_file)
   logging.info("出力完了(daily): %s", daily_output_file)
   logging.info("出力完了(overall): %s", all_output_file)
+  logging.info("出力完了(max): %s", max_output_file)
+  logging.info("出力完了(min): %s", min_output_file)
   logging.info("==========  END  ==========")
 
 if __name__ == "__main__":

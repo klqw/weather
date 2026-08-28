@@ -51,33 +51,6 @@ def trans_date(df):
     format="%Y/%m/%d"
   )
 
-# # 月ごとの平均気温を全取得
-# def month_avg(df):
-#   df["月"] = df["年月日"].dt.month
-
-#   return (
-#     df.groupby(["月"])[
-#       ["平均気温(℃)", "最高気温(℃)", "最低気温(℃)"]
-#     ].mean()
-#   )
-
-# # 月・日ごとの平均気温を全取得
-# def daily_avg(df):
-#   df["月"] = df["年月日"].dt.month
-#   df["日"] = df["年月日"].dt.day
-
-#   return (
-#     df.groupby(["月", "日"])[
-#       ["平均気温(℃)", "最高気温(℃)", "最低気温(℃)"]
-#     ].mean()
-#   )
-
-# # 全期間の平均気温を取得
-# def all_avg(df):
-#   return df[
-#     ["平均気温(℃)", "最高気温(℃)", "最低気温(℃)"]
-#   ].mean()
-
 # make_statsからの取得
 def get_stats(input_file, config):
 
@@ -260,13 +233,252 @@ def all_diff(input_file, location, target_temp, config):
     "差(全体)": actual - base_all
   }).round(1)
   
+# 指定日の最大値取得
+def daily_max(input_file, location, target_temp, config):
+  # StatsのCSVファイルを取得
+  df = get_stats(input_file, config)
+
+  # 指定日の月・日を取得
+  target_month = target_temp["年月日"].iloc[0].month
+  target_day = target_temp["年月日"].iloc[0].day
+
+  # カラム設定
+  avg_tmp = config["DEFAULT"]["avg_tmp"]
+  max_tmp = config["DEFAULT"]["max_tmp"]
+  min_tmp = config["DEFAULT"]["min_tmp"]
+
+  # 指定日の月・日に対する最高値を取得
+  df = df[
+    (df["月"] == target_month) &
+    (df["日"] == target_day)
+  ]
+
+  # ターゲット地点の指定日の月・日に対する最高値を取得
+  target_max = df[
+    df["location"] == location
+  ]
+
+  return target_max
+
+# 指定日の最小値取得
+def daily_min(input_file, location, target_temp, config):
+  # StatsのCSVファイルを取得
+  df = get_stats(input_file, config)
+
+  # 指定日の月・日を取得
+  target_month = target_temp["年月日"].iloc[0].month
+  target_day = target_temp["年月日"].iloc[0].day
+
+  # カラム設定
+  avg_tmp = config["DEFAULT"]["avg_tmp"]
+  max_tmp = config["DEFAULT"]["max_tmp"]
+  min_tmp = config["DEFAULT"]["min_tmp"]
+
+  # 指定日の月・日に対する最高値を取得
+  df = df[
+    (df["月"] == target_month) &
+    (df["日"] == target_day)
+  ]
+
+  # ターゲット地点の指定日の月・日に対する最高値を取得
+  target_min = df[
+    df["location"] == location
+  ]
+  
+  return target_min
+
+# 指定日の最大値と最小値からスコアを計算
+def calc_score(max_input_file, min_input_file, location, target_temp, config):
+  # Statsの最大値CSVファイルを取得
+  max_df = get_stats(max_input_file, config)
+
+  # Statsの最小値CSVファイルを取得
+  min_df = get_stats(min_input_file, config)
+
+  # 指定日の月・日を取得
+  target_month = target_temp["年月日"].iloc[0].month
+  target_day = target_temp["年月日"].iloc[0].day
+
+  # カラム設定
+  avg_tmp = config["DEFAULT"]["avg_tmp"]
+  max_tmp = config["DEFAULT"]["max_tmp"]
+  min_tmp = config["DEFAULT"]["min_tmp"]
+
+  # 指定地点 & 指定日の最大値を取得
+  max_location_daily_df = max_df[
+    (max_df["location"] == location) &
+    (max_df["月"] == target_month) &
+    (max_df["日"] == target_day)
+  ]
+  # スコア計算用に加工
+  max_loc_day = max_location_daily_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].iloc[0]
+
+  # 指定地点 & 指定月の最大値を取得
+  max_location_month_df = max_df[
+    (max_df["location"] == location) &
+    (max_df["月"] == target_month)
+  ]
+  # スコア計算用に加工
+  max_loc_mon = max_location_month_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].max()
+
+  # 指定地点 & 全期間の最大値を取得
+  max_location_all_df = max_df[
+    (max_df["location"] == location)
+  ]
+  # スコア計算用に加工
+  max_loc_all = max_location_all_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].max()
+
+  # 全地点 指定日の最大値を取得
+  max_daily_df = max_df[
+    (max_df["月"] == target_month) &
+    (max_df["日"] == target_day)
+  ]
+  # スコア計算用に加工
+  max_day = max_daily_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].max()
+
+  # 全地点 & 指定月の最大値を取得
+  max_month_df = max_df[
+    (max_df["月"] == target_month)
+  ]
+  # スコア計算用に加工
+  max_mon = max_month_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].max()
+
+  # 全地点 & 全期間の最大値を取得、加工
+  max_all = max_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].max()
+
+  # 指定地点 & 指定日の最小値を取得
+  min_location_daily_df = min_df[
+    (min_df["location"] == location) &
+    (min_df["月"] == target_month) &
+    (min_df["日"] == target_day)
+  ]
+  # スコア計算用に加工
+  min_loc_day = min_location_daily_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].iloc[0]
+
+  # 指定地点 & 指定月の最小値を取得
+  min_location_month_df = min_df[
+    (min_df["location"] == location) &
+    (min_df["月"] == target_month)
+  ]
+  # スコア計算用に加工
+  min_loc_mon = min_location_month_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].min()
+
+  # 指定地点 & 全期間の最小値を取得
+  min_location_all_df = min_df[
+    (min_df["location"] == location)
+  ]
+  # スコア計算用に加工
+  min_loc_all = min_location_all_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].min()
+
+  # 全地点 指定日の最小値を取得
+  min_daily_df = min_df[
+    (min_df["月"] == target_month) &
+    (min_df["日"] == target_day)
+  ]
+  # スコア計算用に加工
+  min_day = min_daily_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].min()
+
+  # 全地点 & 指定月の最小値を取得
+  min_month_df = min_df[
+    (min_df["月"] == target_month)
+  ]
+  # スコア計算用に加工
+  min_mon = min_month_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].min()
+
+  # 全地点 & 全期間の最小値を取得、加工
+  min_all = min_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].min()
+
+  """
+  print("指定地点・指定日")
+  print(max_loc_day)
+  print(min_loc_day)
+  print("指定地点・指定月")
+  print(max_loc_mon)
+  print(min_loc_mon)
+  print("指定地点・全期間")
+  print(max_loc_all)
+  print(min_loc_all)
+  print("全地点・指定日")
+  print(max_day)
+  print(min_day)
+  print("全地点・指定月")
+  print(max_mon)
+  print(min_mon)
+  print("全地点・全期間")
+  print(max_all)
+  print(min_all)
+  """
+
+  # 最大値を取得
+  max_df = daily_max(max_input_file, location, target_temp, config)
+
+  # 最小値を取得
+  min_df = daily_min(min_input_file, location, target_temp, config)
+
+  # 基準値の整形
+  base = target_temp[
+    [avg_tmp, max_tmp, min_tmp]
+  ].iloc[0]
+
+  # 最大値の整形
+  max = max_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].iloc[0]
+
+  # 最小値の整形
+  min = min_df[
+    [avg_tmp, max_tmp, min_tmp]
+  ].iloc[0]
+
+  # スコアのラベル(カラム名)を設定
+  ld = config["DEFAULT"]["ld_score"]
+  lm = config["DEFAULT"]["lm_score"]
+  la = config["DEFAULT"]["la_score"]
+  ad = config["DEFAULT"]["ad_score"]
+  am = config["DEFAULT"]["am_score"]
+  aa = config["DEFAULT"]["aa_score"]
+
+  result = pd.DataFrame({
+    ld: (base - min_loc_day) / (max_loc_day - min_loc_day) * 99 + 1,
+    lm: (base - min_loc_mon) / (max_loc_mon - min_loc_mon) * 99 + 1,
+    la: (base - min_loc_all) / (max_loc_all - min_loc_all) * 99 + 1,
+    ad: (base - min_day) / (max_day - min_day) * 99 + 1,
+    am: (base - min_mon) / (max_mon - min_mon) * 99 + 1,
+    aa: (base - min_all) / (max_all - min_all) * 99 + 1
+  }).round().astype(int)
+
+  return result
 
 # --------------------
 # CSV出力
 # --------------------
 
 # CSV出力前にフォーマットを整える
-def make_csv_result(result, comparison, location, config):
+def make_csv_result(result, comparison, location, score, config):
   # 地点マスタを取得
   location_dir = Path(config["DEFAULT"]["location_input_dir"])
   location_file = (location_dir / "locations.csv")
@@ -278,22 +490,33 @@ def make_csv_result(result, comparison, location, config):
     print(f"エラー: {e}")
     sys.exit(1)
 
+  # 地点名取得
   location_name = df.loc[
     df["location"] == location,
     "location_name"
   ].iloc[0]
   # print(location_name)
+
+  # 出力用DataFrameに 比較対象, 地点, スコアを追加
   result = result.copy()
   result.insert(0, "比較対象", comparison)
   result.insert(1, "地点", location_name)
   result = result.reset_index()
   result = result.rename(columns={"index": "項目"})
+  result = result.join(
+    score,
+    on="項目"
+  )
+  # print(result)
 
   return result
 
 # 整えたフォーマットをCSVで出力
 def save_csv(df, output_file, config):
-  output_file.parent.mkdir(exist_ok=True)
+  output_file.parent.mkdir(
+    parents=True,
+    exist_ok=True
+  )
 
   df.to_csv(
     output_file,
@@ -325,12 +548,17 @@ def main():
     config["DEFAULT"]["stats_input_dir"]
   )
 
+  # Avg Stats
   month_stats_file = (stats_dir / "month_stats.csv")
   daily_stats_file = (stats_dir / "daily_stats.csv")
   all_stats_file = (stats_dir / "overall_stats.csv")
 
+  # Max, Min Stats
+  max_stats_file = (stats_dir / "max_stats.csv")
+  min_stats_file = (stats_dir / "min_stats.csv")
+
   output_dir = Path(
-    config["DEFAULT"]["output_dir"]
+    config["DEFAULT"]["result_dir"]
   )
 
   # --------------------
@@ -385,15 +613,44 @@ def main():
   target_temp = get_target_temp(df, target_date)
   # print(target_temp)
 
-  # 月ごと、日ごと、全期間の平均値比較結果を取得
-  result_m = month_diff(month_stats_file, args.location, target_temp, config)
-  # print(result_m)
-
+  # 日ごとの平均値比較結果を取得
   result_d = daily_diff(daily_stats_file, args.location, target_temp, config)
   # print(result_d)
 
+  # 月ごとの平均値比較結果を取得
+  result_m = month_diff(month_stats_file, args.location, target_temp, config)
+  # print(result_m)
+
+  # 全期間の平均値比較結果を取得
   result_a = all_diff(all_stats_file, args.location, target_temp, config)
   # print(result_a)
+
+  # 指定地点 & 指定日 からスコアを算出
+  score = calc_score(max_stats_file, min_stats_file, args.location, target_temp, config)
+  # print(score)
+
+  # スコアのラベル(カラム名)を設定
+  ld = config["DEFAULT"]["ld_score"]
+  lm = config["DEFAULT"]["lm_score"]
+  la = config["DEFAULT"]["la_score"]
+  ad = config["DEFAULT"]["ad_score"]
+  am = config["DEFAULT"]["am_score"]
+  aa = config["DEFAULT"]["aa_score"]
+
+  # 日ごとのスコアをそれぞれ格納
+  score_d = score[[ld, ad]]
+  score_d.columns = ["地点スコア", "全体スコア"]
+  # print(score_d)
+
+  # 月ごとのスコアをそれぞれ格納
+  score_m = score[[lm, am]]
+  score_m.columns = ["地点スコア", "全体スコア"]
+  # print(score_m)
+
+  # 全期間のスコアをそれぞれ格納
+  score_a = score[[la, aa]]
+  score_a.columns = ["地点スコア", "全体スコア"]
+  # print(score_a)
 
   # --------------------
   # 出力
@@ -405,13 +662,13 @@ def main():
   comparison_a = "全期間平均" # 全期間
 
   # CSV出力用にフォーマット整形
-  month_result = make_csv_result(result_m, comparison_m, args.location, config)
-  daily_result = make_csv_result(result_d, comparison_d, args.location, config)
-  all_result = make_csv_result(result_a, comparison_a, args.location, config)
+  daily_result = make_csv_result(result_d, comparison_d, args.location, score_d, config)
+  month_result = make_csv_result(result_m, comparison_m, args.location, score_m, config)
+  all_result = make_csv_result(result_a, comparison_a, args.location, score_a, config)
 
   result = pd.concat([
-    month_result,
     daily_result,
+    month_result,
     all_result
   ], ignore_index=True)
   # print(result)
