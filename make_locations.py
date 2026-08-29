@@ -22,13 +22,14 @@ def build_location_master(data_dir, config):
     raise FileNotFoundError("CSVファイルがありません")
 
   locations = []
-  regists = []
+  registered_locations = set()
 
   for file in files:
     loc = {}
     with open(file, encoding=config["DEFAULT"]["input_encoding"]) as f:
       reader = csv.reader(f)
 
+      # 0~1行目をスキップして、地点名の行を取得
       next(reader)
       next(reader)
       row = next(reader)
@@ -36,10 +37,12 @@ def build_location_master(data_dir, config):
       location = file.name.split("_")[0]
       location_name = next(value for value in row if value)
 
-    if location not in regists:
-      loc["location"] = location
-      loc["location_name"] = location_name
-      regists.append(location)
+    if location not in registered_locations:
+      loc = {
+        "location": location,
+        "location_name": location_name
+      }
+      registered_locations.add(location)
       locations.append(loc)
 
   return locations
@@ -82,7 +85,7 @@ def main():
   try:
     locations = build_location_master(input_dir, config)
 
-  except FileExistsError as e:
+  except FileNotFoundError as e:
     logging.error(str(e))
     print(f"エラー: {e}")
     sys.exit(1)

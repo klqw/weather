@@ -49,82 +49,65 @@ def load_csv_files(data_dir, config):
 # データいじり
 # --------------------
 
-# 年月日をdatetimeに変換
-def trans_date(df):
+# 年月日の前処理 (datetimeに変換 -> 月, 日を作成)
+def prepare_date(df):
+  df = df.copy()
+
   df["年月日"] = pd.to_datetime(
     df["年月日"],
     format="%Y/%m/%d"
   )
+  df["月"] = df["年月日"].dt.month
+  df["日"] = df["年月日"].dt.day
+
+  return df
+
+# 表示項目をまとめる
+def get_temp_columns(config):
+  return [
+    config["DEFAULT"]["avg_tmp"],
+    config["DEFAULT"]["max_tmp"],
+    config["DEFAULT"]["min_tmp"]
+  ]
 
 # locationごと & 月ごとの平均気温を全取得
-def month_location_avg(df, config):
-  df["月"] = df["年月日"].dt.month
-
+def location_month_avg(df, config):
   return (
     df.groupby(["location", "月"])[
-      [
-        config["DEFAULT"]["avg_tmp"],
-        config["DEFAULT"]["max_tmp"],
-        config["DEFAULT"]["min_tmp"]
-      ]
-    ].mean()
+      get_temp_columns(config)
+    ].mean().reset_index()
   )
 
 # locationごと & 月・日ごとの平均気温を全取得
-def daily_location_avg(df, config):
-  df["月"] = df["年月日"].dt.month
-  df["日"] = df["年月日"].dt.day
-
+def location_daily_avg(df, config):
   return (
     df.groupby(["location", "月", "日"])[
-      [
-        config["DEFAULT"]["avg_tmp"],
-        config["DEFAULT"]["max_tmp"],
-        config["DEFAULT"]["min_tmp"]
-      ]
-    ].mean()
+      get_temp_columns(config)
+    ].mean().reset_index()
   )
 
 # locationごと & 全期間の平均気温を取得
-def all_location_avg(df, config):
+def location_overall_avg(df, config):
   return (
     df.groupby("location")[
-      [
-        config["DEFAULT"]["avg_tmp"],
-        config["DEFAULT"]["max_tmp"],
-        config["DEFAULT"]["min_tmp"]
-      ]
-    ].mean()
+      get_temp_columns(config)
+    ].mean().reset_index()
   )
 
 # locationごと & 月・日ごとの各気温の最高値を全取得
-def daily_location_max(df, config):
-  df["月"] = df["年月日"].dt.month
-  df["日"] = df["年月日"].dt.day
-
+def location_daily_max(df, config):
   return (
     df.groupby(["location", "月", "日"])[
-      [
-        config["DEFAULT"]["avg_tmp"],
-        config["DEFAULT"]["max_tmp"],
-        config["DEFAULT"]["min_tmp"]
-      ]
-    ].max()
+      get_temp_columns(config)
+    ].max().reset_index()
   )
 
 # locationごと & 月・日ごとの各気温の最低値を全取得
-def daily_location_min(df, config):
-  df["月"] = df["年月日"].dt.month
-  df["日"] = df["年月日"].dt.day
-
+def location_daily_min(df, config):
   return (
     df.groupby(["location", "月", "日"])[
-      [
-        config["DEFAULT"]["avg_tmp"],
-        config["DEFAULT"]["max_tmp"],
-        config["DEFAULT"]["min_tmp"]
-      ]
-    ].min()
+      get_temp_columns(config)
+    ].min().reset_index()
   )
 
 # --------------------
@@ -140,6 +123,7 @@ def save_csv(df, output_file, config):
 
   df.to_csv(
     output_file,
+    index=False,
     encoding=config["DEFAULT"]["output_encoding"]
   )
 
@@ -179,24 +163,24 @@ def main():
   # データ加工
   # --------------------
 
-  # 年月日をdatetimeに変換
-  trans_date(df)
+  # 日付関連の前処理
+  df = prepare_date(df)
 
   # 月ごと、日ごと、全期間の平均値比較結果を取得
-  result_m = month_location_avg(df, config)
-  # print(result_m)
+  month_stats = location_month_avg(df, config)
+  # print(month_stats)
 
-  result_d = daily_location_avg(df, config)
-  # print(result_d)
+  daily_stats = location_daily_avg(df, config)
+  # print(daily_stats)
 
-  result_a = all_location_avg(df, config)
-  # print(result_a)
+  overall_stats = location_overall_avg(df, config)
+  # print(overall_stats)
 
   # locationごと & 月・日ごとの各気温の最高値を全取得
-  result_max = daily_location_max(df, config)
+  daily_max_stats = location_daily_max(df, config)
 
   # locationごと & 月・日ごとの各気温の最低値を全取得
-  result_min = daily_location_min(df, config)
+  daily_min_stats = location_daily_min(df, config)
 
   # --------------------
   # 出力
@@ -217,11 +201,11 @@ def main():
   min_output_file = (output_dir / config["DEFAULT"]["stats_dir"] / min_filename)
 
   # 月、月・日、全期間のCSV出力
-  save_csv(result_m, month_output_file, config)
-  save_csv(result_d, daily_output_file, config)
-  save_csv(result_a, all_output_file, config)
-  save_csv(result_max, max_output_file, config)
-  save_csv(result_min, min_output_file, config)
+  save_csv(month_stats, month_output_file, config)
+  save_csv(daily_stats, daily_output_file, config)
+  save_csv(overall_stats, all_output_file, config)
+  save_csv(daily_max_stats, max_output_file, config)
+  save_csv(daily_min_stats, min_output_file, config)
   print(f"\n月ごとのCSV出力先: {month_output_file}")
   print(f"月・日ごとのCSV出力先: {daily_output_file}")
   print(f"全期間のCSV出力先: {all_output_file}")
