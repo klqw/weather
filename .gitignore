@@ -221,7 +221,9 @@ __marimo__/
 data
 
 # Output Directory
-output
+output/location
+output/stats
+output/result
 
 # Log File
 app.log

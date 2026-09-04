@@ -1,0 +1,179 @@
+body {
+  font-family: sans-serif;
+  font-size: 0.8em;
+  max-width: 900px;
+  margin: 40px auto;
+  background-color: #fffbea;
+}
+
+h1 {
+  color: #4a4635;
+  /* color: #24231e; */
+  font-size: 2em;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ddd6c4;
+  margin: 20px 0;
+}
+
+.weather-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: white;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.weather-card h2 {
+  color: #5a5543;
+  font-size: 1.4em;
+  margin: 0 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e8dfad;
+}
+
+.weather-card h3 {
+  color: #4a4635;
+  letter-spacing: 0.05em;
+}
+
+.comparison {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.actual {
+  margin-bottom: 15px;
+  letter-spacing: 0.08em;
+}
+
+.actual strong {
+  font-size: 1.2em;
+}
+
+.averages {
+  display: flex;
+  gap: 0;
+  margin-bottom: 5px;
+  letter-spacing: 0.03em;
+}
+
+.averages span {
+  padding: 0 15px;
+  border-right: 1px solid #ccc;
+}
+
+.averages span:first-child {
+  padding-left: 0;
+}
+
+.averages span:last-child {
+  border-right: none;
+}
+
+.differences {
+  display: flex;
+  gap: 0;
+  margin-bottom: 15px;
+  letter-spacing: 0.02em;
+}
+
+.differences > span {
+  padding: 0 15px;
+  border-right: 1px solid #ccc;
+}
+
+.differences > span:first-child {
+  padding-left: 0;
+}
+
+.differences > span:last-child {
+  border-right: none;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.score-label {
+  width: 40px;
+  font-weight: bold;
+  color: #4a4635;
+  letter-spacing: 0.05em;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  height: 25px;
+  background: repeating-linear-gradient(
+    to right,
+    #ddd 0,
+    #ddd 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
+.bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to right,
+    white 0,
+    white 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
+.marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: bold;
+  color: white;
+}
+
+.hot {
+  font-weight: bold;
+  color: #d32f2f;
+  margin-left: 10px;
+  letter-spacing: 0.05em;
+}
+
+.cold {
+  font-weight: bold;
+  color: #1565c0;
+  margin-right: 5px;
+  letter-spacing: 0.03em;
+}
+
+.positive {
+  color: #d32f2f;
+}
+
+.negative {
+  color: #1565c0;
+}
+
+.zero {
+  color: #666;
+}

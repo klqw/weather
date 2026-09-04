@@ -636,9 +636,9 @@ def main():
   # --------------------
 
   # 「比較対象」カラムの値設定
-  comparison_month = str(target_date.month) + "月平均"  # 月
-  comparison_daily = str(target_date.month) + "月" + str(target_date.day) + "日平均"  # 日
-  comparison_overall = "全期間平均" # 全期間
+  comparison_month = str(target_date.month) + "月で比較"  # 月
+  comparison_daily = str(target_date.month) + "月" + str(target_date.day) + "日で比較"  # 日
+  comparison_overall = "全期間で比較" # 全期間
 
   # CSV出力用にフォーマット整形
   output_result_daily = make_csv_result(
