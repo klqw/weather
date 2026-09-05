@@ -21,6 +21,15 @@ def load_config():
 # CSV -> HTML
 # --------------------
 
+# output/result からCSVを取得
+def load_result_csv_files(result_dir):
+  csv_files = list(result_dir.glob("*.csv"))
+
+  if not csv_files:
+    raise FileNotFoundError("CSVファイルがありません")
+
+  return csv_files
+
 # スコアごとにマーカーとバッジの背景色設定
 def score_to_color(score):
   """
@@ -90,10 +99,15 @@ def create_html(csv_file, config):
   location, date = csv_file.stem.split("_")
 
   # 地点名取得
-  location_name = location_df.loc[
+  location_rows = location_df.loc[
     location_df["location"] == location,
     "location_name"
-  ].iloc[0]
+  ]
+
+  if location_rows.empty:
+    raise ValueError(f"地点マスタに存在しません: {location}")
+  
+  location_name = location_rows.iloc[0]
 
   # 日付を表示用に変換
   display_date = (
@@ -228,16 +242,16 @@ def main():
   logging.info("========== START ==========")
 
   input_dir = Path(config["DEFAULT"]["result_dir"])
-  csv_files = list(input_dir.glob("*.csv"))
 
   # --------------------
   # 各CSVをHTMLに変換
   # --------------------
   try:
-      for csv_file in csv_files:
-        create_html(csv_file, config)
+    csv_files = load_result_csv_files(input_dir)
+    for csv_file in csv_files:
+      create_html(csv_file, config)
 
-  except FileNotFoundError as e:
+  except (FileNotFoundError, ValueError) as e:
     logging.error(str(e))
     print(f"エラー: {e}")
     logging.info("==========  END  ==========")
